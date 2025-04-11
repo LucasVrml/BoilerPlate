@@ -1,0 +1,60 @@
+services:
+  client:
+    build: ./client
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules # Monté en vide pour protéger node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - server
+    networks:
+      - stilldeep
+
+  server:
+    build: ./server
+    ports:
+      - "3333:3333"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    env_file:
+      - ./server/.env
+    environment:
+      - NODE_ENV=development
+      - PORT=3333
+      - HOST=0.0.0.0
+      - DB_CONNECTION=pg
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+      - DB_DB_NAME=mydb
+    depends_on:
+      - postgres
+    networks:
+      - stilldeep
+
+  postgres:
+    image: postgres:15
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+      POSTGRES_HOST_AUTH_METHOD: trust
+    networks:
+      - stilldeep
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+
+networks:
+  stilldeep:
+    driver: bridge
